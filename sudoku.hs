@@ -1,3 +1,5 @@
+module Sudoku where
+
 import Data.List
 import qualified Data.Map as Map
 import qualified Data.Set as Set
@@ -25,10 +27,12 @@ unitlist =
         [cross rs cs | rs <- ["ABC", "DEF", "GHI"], cs <- ["123", "456", "789"]]
 
 units :: Map.Map Square [Unit]
-units = Map.fromList [(s, [filter (/= s) u | u <- unitlist, s `elem` u]) | s <- squares]
+units = Map.fromList [(s, [u | u <- unitlist, s `elem` u]) | s <- squares]
 
 lookup' :: Ord k => k -> Map.Map k c -> c
 lookup' key _map = fromJust . Map.lookup key $ _map
 
-peers :: Map.Map Square (Set Square)
+peers :: Map.Map Square (Set.Set Square)
 peers = Map.fromList [(s, Set.difference (Set.fromList . concat . lookup' s $ units) (Set.fromList [s])) | s <- squares]
+
+
