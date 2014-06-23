@@ -36,3 +36,8 @@ peers :: Map.Map Square (Set.Set Square)
 peers = Map.fromList [(s, Set.difference (Set.fromList . concat . lookup' s $ units) (Set.fromList [s])) | s <- squares]
 
 
+gridValues :: [Char] -> Map.Map Square Char
+gridValues grid = 
+    let chars = [c | c <- grid, c `elem` digits || c `elem` "0."]
+    in Map.fromList $ zip squares chars
+
