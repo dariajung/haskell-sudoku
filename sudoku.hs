@@ -47,15 +47,24 @@ gridValues grid =
         
 
 eliminate values s d = 
-    if d `elem` (lookup' values s) == False then values
+    if (d `elem` (lookup' s values)) == False then values
     else 
-    let newV = Map.update (\vals -> Just $ del d vals) s values
+    let newV = Map.update (\vals -> Just $ delete d vals) s values
 
     -- (1) If a square s is reduced to one value d2, then eliminate d2 from the peers.
-    propagate_peers vs 
-        | length (lookup' s vs) == 0    = Nothing
-        | length (lookup' s vs) == 1    =
-            let d2 = (lookup' s vs)
+        propagate_peers vs 
+            | length (lookup' s vs) == 0    = Nothing
+            | length (lookup' s vs) == 1    =
+                let d2 = (vs Map.! s)
+                --  not all(eliminate(values, s2, d2) for s2 in peers[s]):
+                    inner_prop = if (all (==True) [eliminate vs s2 d2 | s2 <- lookup' s peers]) == False then Nothing
+                    else Just vs
+
+                in inner_prop
+
+    in newV
+
+
 
 
 
