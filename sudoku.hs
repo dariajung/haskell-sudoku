@@ -57,12 +57,12 @@ eliminate values s d =
             | length (lookup' s vs) == 1    =
                 let d2 = (vs Map.! s)
                 --  not all(eliminate(values, s2, d2) for s2 in peers[s]):
-                    inner_prop = if (all (==True) [eliminate vs s2 d2 | s2 <- lookup' s peers]) == False then Nothing
+                    inner_prop = if (all (==True) (map (==Nothing) [eliminate vs s2 d2 | s2 <- Set.toList $ peers Map.! s])) == False then Nothing
                     else Just vs
-
                 in inner_prop
 
-    in newV
+    -- (2) If a unit u is reduced to only one place for a value d, then put it there.
+        
 
 
 
