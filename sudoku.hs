@@ -4,6 +4,7 @@ import Data.List
 import qualified Data.Map as Map
 import qualified Data.Set as Set
 import Data.Maybe
+import Control.Monad
 
 -- set types
 type Digit = Char
@@ -41,11 +42,13 @@ gridValues grid =
     let chars = [c | c <- grid, c `elem` digits || c `elem` "0."]
     in Map.fromList (zip squares chars)
 
--- values = dict((s, digits) for s in squares)
--- gridParse :: [Char] -> Grid
---gridParse grid = 
---    let values = Map.fromList [(s, digits) | s <- squares]
-        
+parseGrid :: [Char] -> Maybe Grid
+parseGrid str = 
+    let values = Map.fromList [(s, digits) | s <- squares]
+        reduce vs (s, d) = if d `elem` digits then assign vs s d else Just vs
+        gridVals = Map.toList (gridValues str)
+    in foldM reduce values gridVals
+
 eliminate :: Grid -> Square -> Char -> Maybe Grid
 eliminate values s d = 
     if (d `elem` (lookup' s values)) == False then Just values
