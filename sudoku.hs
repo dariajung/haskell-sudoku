@@ -91,6 +91,26 @@ assign values s d =
         reduce vals dig = eliminate vals s dig
     in foldM reduce values otherValues
 
+search :: Grid -> Maybe Grid
+search values = 
+    case [(len, (s, digits)) | (s, digits) <- Map.assocs values, let len = length digits, len /= 1] of 
+        [] -> return values
+        list -> do 
+            let (_, (s, digs)) = minimum list
+            msum [(assign values s d) >>= search | d <- digs]
+
+solve :: [Char] -> Maybe Grid
+solve gstr = do
+    grid <- parseGrid gstr
+    search grid
+
+solveAndPrint :: [Char] -> IO()
+solveAndPrint gstr = do
+    let grid = parseGrid gstr
+        solved = grid >>= search
+        str = gridToString (fromJust $ solved)
+    printGrid str
+        
 -- taken from http://www.haskell.org/haskellwiki/Sudoku#Constraint_Propagation_.28a_la_Norvig.29
 gridToString :: Grid -> String
 gridToString grid =
