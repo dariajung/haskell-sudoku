@@ -49,6 +49,9 @@ parseGrid str =
         gridVals = Map.toList (gridValues str)
     in foldM reduce values gridVals
 
+
+-- Propagating constraints --
+
 eliminate :: Grid -> Square -> Char -> Maybe Grid
 eliminate values s d = 
     if (d `elem` (values Map.! s)) == False then Just values -- Already eliminated 
@@ -76,7 +79,7 @@ propagateUnits vs s d =
     let reduceProp vs' u = inner_prop_units vs' u              
         inner_prop_units vals unit
             | length (dplaces) == 0 = Nothing -- contradiction
-            | length (dplaces) == 1 = assign vals (dplaces !! 0) d
+            | length (dplaces) == 1 = assign vals (dplaces !! 0) d -- d can only be in one place in unit; assign it there
             | otherwise             = Just vals
             where dplaces = [sq | sq <- unit, d `elem` (vals Map.! sq)]
 
@@ -87,3 +90,27 @@ assign values s d =
     let otherValues = (delete d $ values Map.! s)
         reduce vals dig = eliminate vals s dig
     in foldM reduce values otherValues
+
+-- taken from http://www.haskell.org/haskellwiki/Sudoku#Constraint_Propagation_.28a_la_Norvig.29
+gridToString :: Grid -> String
+gridToString grid =
+    let l1 = Map.elems grid
+        l2 = (map (\s -> " " ++ s ++ " ")) l1
+        l3 = (map concat . sublist 3) l2
+        l4 = (sublist 3) l3
+        l5 = (map (concat . intersperse "|")) l4
+        l6 = (concat . intersperse [line] . sublist 3) l5
+    in unlines l6
+        where 
+            sublist n [] = []
+            sublist n xs = ys : sublist n zs
+                where (ys,zs) = splitAt n xs
+            line = hyphens ++ "+" ++ hyphens ++ "+" ++ hyphens
+            hyphens = replicate 9 '-'
+
+printGrid :: String -> IO()
+printGrid str = do
+    let grid = parseGrid str
+        stringified = gridToString (fromJust $ grid)
+    putStr stringified
+
