@@ -59,19 +59,21 @@ eliminate values s d =
         propagate_peers vs 
             | length (vs Map.! s) == 0    = Nothing
             | length (vs Map.! s) == 1    =
-                let d2 = (vs Map.! s) !! 0
-                    inner_prop_peers
-                        | (all (==True) (map (/=Nothing) [eliminate vs s2 d2 | s2 <- Set.toList $ peers Map.! s])) == False = Nothing
-                in inner_prop_peers
+                let d2 = (vs Map.! s) !! 0 -- vs Map.! s should be length 1
+                    inner_prop_peers values s2 = eliminate values s2 d2 
+                in foldM inner_prop_peers vs (Set.toList $ peers Map.! s)
+            | otherwise                    = Just vs
 
     -- (2) If a unit u is reduced to only one place for a value d, then put it there.
-        propagate_units vs = 
-            let u = concat ([x | x <- units Map.! s])
-                dplaces = [y | y <- u, d `elem` (concat $ Map.fold (:) [] vs)]
-                inner_prop_units 
+        propagate_units vs =
+            let reduce_prop vs' u = inner_prop_units vs' u              
+                inner_prop_units vals unit
                     | length (dplaces) == 0 = Nothing
-                    | length (dplaces) == 1 = assign vs (dplaces !! 0) d
-            in inner_prop_units
+                    | length (dplaces) == 1 = assign vals (dplaces !! 0) d
+                    | otherwise             = Just vals
+                    where dplaces = [sq | sq <- unit, d `elem` (vals Map.! s)]
+
+            in foldM reduce_prop vs (units Map.! s)
 
     in do
         vs' <- propagate_peers newV
@@ -80,6 +82,6 @@ eliminate values s d =
 
 assign :: Grid -> Square -> Digit -> Maybe Grid
 assign values s d = 
-    let other_values = Map.update (\vals -> Just $ delete d vals) s values
-    in if (all (==True) (map (/=Nothing) [eliminate values s d2 | d2 <- (concat $ Map.fold (:) [] other_values)])) == False then Nothing
-        else Just values
+    let other_values = (delete d $ values Map.! s)
+        reduce vals dig = eliminate vals s dig
+    in foldM reduce values other_values
