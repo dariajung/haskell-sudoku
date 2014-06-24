@@ -57,23 +57,17 @@ eliminate values s d =
             | length (vs Map.! s) == 0    = Nothing
             | length (vs Map.! s) == 1    =
                 let d2 = (vs Map.! s) !! 0
-                --  not all(eliminate(values, s2, d2) for s2 in peers[s]):
-                    --inner_prop_peers = if (all (==True) (map (/=Nothing) [eliminate vs s2 d2 | s2 <- Set.toList $ peers Map.! s])) == False then Nothing
-                    --else Just vs
                     inner_prop_peers
                         | (all (==True) (map (/=Nothing) [eliminate vs s2 d2 | s2 <- Set.toList $ peers Map.! s])) == False = Nothing
                 in inner_prop_peers
 
     -- (2) If a unit u is reduced to only one place for a value d, then put it there.
         propagate_units vs = 
-        -- [s for s in u if d in values[s]]
             let u = concat ([x | x <- units Map.! s])
                 dplaces = [y | y <- u, d `elem` (concat $ Map.fold (:) [] vs)]
                 inner_prop_units 
                     | length (dplaces) == 0 = Nothing
                     | length (dplaces) == 1 = assign vs (dplaces !! 0) d
-                    
-                    -- | otherwise             = Just vs
             in inner_prop_units
 
     in do
